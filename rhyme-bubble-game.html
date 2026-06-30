@@ -1,0 +1,1104 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>🎤 ล่าคำสัมผัส</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Mali:wght@400;600;700&family=Sriracha&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --sky-top:#7ec8f7;
+    --sky-mid:#a4a0e8;
+    --sky-bottom:#c89bea;
+    --bubble1:#ffd966;
+    --bubble2:#ff9bb3;
+    --bubble3:#8ce99a;
+    --bubble4:#74c0fc;
+    --bubble5:#d0bfff;
+    --bubble6:#ffc285;
+    --correct:#37b24d;
+    --wrong:#fa5252;
+    --card-bg:#fffaf2;
+    --text-dark:#3b2a55;
+    --accent:#ff7eb6;
+    --accent2:#7048e8;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0; padding:0; width:100%; height:100%; overflow:hidden;}
+  body{
+    font-family:'Mali', sans-serif;
+    color:var(--text-dark);
+    background:linear-gradient(180deg, var(--sky-top) 0%, var(--sky-mid) 55%, var(--sky-bottom) 100%);
+    position:fixed; inset:0;
+    user-select:none;
+  }
+  h1,h2,h3,.title-font{font-family:'Sriracha', cursive;}
+
+  /* ---------- background decor (ambient only, NOT bubbles) ---------- */
+  #bgDecor{position:fixed; inset:0; z-index:0; overflow:hidden; pointer-events:none;}
+  .cloud{position:absolute; background:rgba(255,255,255,0.75); border-radius:50%; filter:blur(1px); animation:drift linear infinite;}
+  .star{position:absolute; color:rgba(255,255,255,0.85); font-size:18px; animation:twinkle 2.6s ease-in-out infinite;}
+  @keyframes drift{
+    0%{transform:translateX(-10vw);}
+    100%{transform:translateX(110vw);}
+  }
+  @keyframes twinkle{
+    0%,100%{opacity:0.25; transform:scale(0.9);}
+    50%{opacity:0.9; transform:scale(1.15);}
+  }
+
+  /* ---------- screens ---------- */
+  .screen{
+    position:fixed; inset:0; z-index:10;
+    display:none; flex-direction:column; align-items:center; justify-content:center;
+    padding:18px; text-align:center;
+  }
+  .screen.active{display:flex;}
+  .card{
+    background:var(--card-bg);
+    border-radius:28px;
+    padding:26px 24px;
+    box-shadow:0 14px 0 rgba(0,0,0,0.08), 0 14px 30px rgba(60,30,90,0.25);
+    max-width:480px; width:92%;
+    max-height:92vh; overflow-y:auto;
+  }
+  .btn{
+    font-family:'Mali', sans-serif; font-weight:700; font-size:1.05rem;
+    border:none; border-radius:18px; padding:14px 22px; cursor:pointer;
+    color:#fff; box-shadow:0 6px 0 rgba(0,0,0,0.15);
+    transition:transform .08s ease;
+    margin:6px; touch-action:manipulation;
+  }
+  .btn:active{transform:translateY(4px); box-shadow:0 2px 0 rgba(0,0,0,0.15);}
+  .btn-pink{background:linear-gradient(180deg,#ff9bc1,#ff6b9d);}
+  .btn-blue{background:linear-gradient(180deg,#74c0fc,#4dabf7);}
+  .btn-green{background:linear-gradient(180deg,#8ce99a,#51cf66);}
+  .btn-purple{background:linear-gradient(180deg,#d0bfff,#9775fa);}
+  .btn-gray{background:linear-gradient(180deg,#ced4da,#adb5bd); color:#3b2a55;}
+  .btn:focus-visible{outline:3px solid #3b2a55; outline-offset:2px;}
+
+  input[type="text"], input[type="number"], select, textarea{
+    font-family:'Mali', sans-serif; font-size:1rem;
+    border:2px solid #e2d9f3; border-radius:12px; padding:10px 12px;
+    width:100%; margin:6px 0; background:#fff;
+  }
+  input.input-error{border-color:var(--wrong); animation:shakeField .3s;}
+  @keyframes shakeField{
+    0%,100%{transform:translateX(0);}
+    25%{transform:translateX(-6px);}
+    75%{transform:translateX(6px);}
+  }
+  label{font-size:0.9rem; font-weight:700; display:block; text-align:left; margin-top:8px;}
+
+  /* ---------- home ---------- */
+  #screen-home .title-font{font-size:clamp(1.8rem,7vw,2.6rem); color:var(--accent2); margin:4px 0;}
+  #schoolInfoHome{font-size:0.95rem; color:#6a5a8a; margin-bottom:10px;}
+
+  /* ---------- game screen ---------- */
+  #screen-game{padding:0; z-index:10;}
+  #bubbleArea{
+    position:fixed; inset:0; z-index:20;
+    touch-action:none;
+  }
+  .bubble{
+    position:absolute;
+    border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    text-align:center;
+    font-family:'Mali', sans-serif; font-weight:700;
+    color:#3b2a55;
+    box-shadow:inset -6px -8px 0 rgba(255,255,255,0.35), inset 6px 8px 0 rgba(0,0,0,0.06), 0 6px 14px rgba(40,20,60,0.25);
+    cursor:pointer;
+    touch-action:none;
+    transition:transform .15s ease, opacity .15s ease;
+    padding:4px;
+    line-height:1.1;
+    word-break:keep-all;
+  }
+  .bubble.c1{background:radial-gradient(circle at 35% 30%, #fff5cc, var(--bubble1));}
+  .bubble.c2{background:radial-gradient(circle at 35% 30%, #ffe3ec, var(--bubble2));}
+  .bubble.c3{background:radial-gradient(circle at 35% 30%, #e6fcea, var(--bubble3));}
+  .bubble.c4{background:radial-gradient(circle at 35% 30%, #e3f4ff, var(--bubble4));}
+  .bubble.c5{background:radial-gradient(circle at 35% 30%, #f1eaff, var(--bubble5));}
+  .bubble.c6{background:radial-gradient(circle at 35% 30%, #fff0e0, var(--bubble6));}
+  .bubble.popping{transform:scale(1.5); opacity:0; pointer-events:none;}
+
+  #hud{
+    position:fixed; top:0; left:0; right:0; z-index:60;
+    display:flex; justify-content:space-between; align-items:center;
+    padding:10px 14px; pointer-events:none;
+  }
+  .hud-pill{
+    background:rgba(255,255,255,0.92); border-radius:16px; padding:8px 14px;
+    font-weight:700; box-shadow:0 4px 0 rgba(0,0,0,0.08);
+    font-size:clamp(0.85rem,3vw,1.05rem);
+    display:flex; align-items:center; gap:6px;
+  }
+  #comboPill{color:var(--accent);}
+  #timeBarWrap{
+    position:fixed; top:54px; left:14px; right:14px; z-index:60;
+    height:10px; background:rgba(255,255,255,0.5); border-radius:8px; overflow:hidden;
+    pointer-events:none;
+  }
+  #timeBarFill{height:100%; background:linear-gradient(90deg,#51cf66,#ffd43b,#fa5252); width:100%; transition:width 1s linear;}
+
+  #questionBar{
+    position:fixed; top:74px; left:50%; transform:translateX(-50%);
+    z-index:60; pointer-events:none;
+    background:rgba(255,255,255,0.95); border-radius:20px;
+    padding:10px 22px; box-shadow:0 6px 0 rgba(0,0,0,0.08);
+    text-align:center;
+  }
+  #questionBar .label{font-size:0.8rem; color:#6a5a8a; font-weight:700;}
+  #questionWord{font-family:'Sriracha', cursive; font-size:clamp(1.6rem,7vw,2.4rem); color:var(--accent2);}
+
+  #exitGameBtn{
+    position:fixed; bottom:14px; right:14px; z-index:60;
+    background:rgba(255,255,255,0.92); border:none; border-radius:50%;
+    width:48px; height:48px; font-size:1.3rem; cursor:pointer;
+    box-shadow:0 4px 0 rgba(0,0,0,0.1);
+  }
+
+  #countdownOverlay{
+    position:fixed; inset:0; z-index:80; pointer-events:none;
+    display:none; align-items:center; justify-content:center;
+    background:rgba(50,30,80,0.35);
+  }
+  #countdownText{
+    font-family:'Sriracha', cursive; font-size:clamp(4rem,22vw,8rem);
+    color:#fff; text-shadow:0 6px 0 rgba(0,0,0,0.2);
+  }
+
+  .floatScore{
+    position:fixed; z-index:70; font-family:'Sriracha', cursive; font-weight:700;
+    font-size:1.4rem; pointer-events:none;
+    transition:transform 0.8s ease, opacity 0.8s ease;
+  }
+
+  #gameWrap.shake{animation:screenShake .35s;}
+  @keyframes screenShake{
+    0%,100%{transform:translateX(0);}
+    20%{transform:translateX(-10px);}
+    40%{transform:translateX(8px);}
+    60%{transform:translateX(-6px);}
+    80%{transform:translateX(4px);}
+  }
+
+  /* ---------- result screen ---------- */
+  #resultCard{background:var(--card-bg); border-radius:28px; padding:24px;}
+  #resultStars{font-size:2rem; letter-spacing:4px; margin:6px 0;}
+  #resultGrade{font-family:'Sriracha', cursive; font-size:1.6rem; color:var(--accent2);}
+  .resultRow{display:flex; justify-content:space-between; padding:4px 6px; font-size:0.98rem; border-bottom:1px dashed #e2d9f3;}
+
+  /* ---------- leaderboard ---------- */
+  .lbRow{display:flex; align-items:center; gap:10px; padding:8px 10px; border-radius:14px; margin:4px 0; background:#fff5f9;}
+  .lbRow.gold{background:#fff6da;}
+  .lbRow.silver{background:#f1f3f5;}
+  .lbRow.bronze{background:#ffe8d6;}
+  .lbRank{font-weight:700; width:30px;}
+  .lbName{flex:1; text-align:left; font-weight:700;}
+  .lbScore{font-weight:700; color:var(--accent2);}
+
+  /* ---------- settings ---------- */
+  .pairCard{border:2px dashed #e2d9f3; border-radius:16px; padding:10px; margin:10px 0; text-align:left; position:relative;}
+  .pairCard .delPairBtn{position:absolute; top:6px; right:6px; background:var(--wrong); color:#fff; border:none; border-radius:50%; width:26px; height:26px; cursor:pointer;}
+  .settingsRow{display:flex; gap:10px; align-items:center;}
+  .settingsRow > *{flex:1;}
+  .toggleRow{display:flex; align-items:center; gap:10px; justify-content:flex-start; margin-top:10px;}
+
+  #toast{
+    position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(20px);
+    background:#3b2a55; color:#fff; padding:10px 20px; border-radius:14px;
+    font-weight:700; z-index:200; opacity:0; pointer-events:none; transition:all .25s ease;
+  }
+  #toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
+
+  .smallNote{font-size:0.78rem; color:#8a7aa8; margin-top:4px;}
+</style>
+</head>
+<body>
+
+<div id="bgDecor"></div>
+
+<!-- ===================== HOME ===================== -->
+<div id="screen-home" class="screen active">
+  <div class="card">
+    <h1 class="title-font" id="gameNameHome">🎤 ล่าคำสัมผัส</h1>
+    <div id="schoolInfoHome"></div>
+    <label for="studentNameInput">ชื่อนักเรียน</label>
+    <input type="text" id="studentNameInput" placeholder="พิมพ์ชื่อของหนูตรงนี้นะ" maxlength="20">
+    <div style="margin-top:14px;">
+      <button class="btn btn-pink" id="startBtn">▶️ เริ่มเล่น</button><br>
+      <button class="btn btn-blue" id="goLeaderboardBtn">🏆 ดูคะแนน</button>
+      <button class="btn btn-purple" id="goSettingsBtn">⚙️ ตั้งค่า</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== GAME ===================== -->
+<div id="screen-game" class="screen">
+  <div id="gameWrap" style="position:fixed; inset:0;">
+    <div id="bubbleArea"></div>
+    <div id="hud">
+      <div class="hud-pill">⏱️ <span id="hudTime">60</span> วิ</div>
+      <div class="hud-pill" id="comboPill">🔥 x<span id="hudCombo">0</span></div>
+      <div class="hud-pill">⭐ <span id="hudScore">0</span></div>
+    </div>
+    <div id="timeBarWrap"><div id="timeBarFill"></div></div>
+    <div id="questionBar">
+      <div class="label">หาคำที่คล้องจองกับ</div>
+      <div id="questionWord">นา</div>
+    </div>
+    <div id="countdownOverlay"><div id="countdownText">3</div></div>
+    <button id="exitGameBtn" title="ออกจากเกม">✖️</button>
+  </div>
+</div>
+
+<!-- ===================== RESULT ===================== -->
+<div id="screen-result" class="screen">
+  <div class="card" id="resultCard">
+    <h2 class="title-font" id="resultGameName">🎤 ล่าคำสัมผัส</h2>
+    <div id="resultStudent" style="font-weight:700; font-size:1.1rem;"></div>
+    <div id="resultStars">⭐⭐⭐⭐⭐</div>
+    <div id="resultGrade">เก่งมาก!</div>
+    <div style="margin:14px 0;">
+      <div class="resultRow"><span>คะแนนรวม</span><span id="resultScore">0</span></div>
+      <div class="resultRow"><span>ตอบถูก</span><span id="resultCorrect">0</span></div>
+      <div class="resultRow"><span>ตอบผิด</span><span id="resultWrong">0</span></div>
+      <div class="resultRow"><span>คอมโบสูงสุด</span><span id="resultMaxCombo">0</span></div>
+    </div>
+    <div class="smallNote" id="resultTeacherSchool"></div>
+    <div class="smallNote" id="resultDate"></div>
+    <div style="margin-top:14px;">
+      <button class="btn btn-pink" id="playAgainBtn">🔁 เล่นอีกครั้ง</button>
+      <button class="btn btn-green" id="saveImageBtn">🖼️ บันทึกเป็นรูปภาพ</button><br>
+      <button class="btn btn-blue" id="resultLeaderboardBtn">🏆 ตารางคะแนน</button>
+      <button class="btn btn-gray" id="resultHomeBtn">🏠 หน้าแรก</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== LEADERBOARD ===================== -->
+<div id="screen-leaderboard" class="screen">
+  <div class="card">
+    <h2 class="title-font">🏆 ตารางคะแนน</h2>
+    <div id="leaderboardList" style="margin-top:10px; max-height:50vh; overflow-y:auto;"></div>
+    <div style="margin-top:14px;">
+      <button class="btn btn-gray" id="lbHomeBtn">🏠 หน้าแรก</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== SETTINGS ===================== -->
+<div id="screen-settings" class="screen">
+  <div class="card" style="max-width:560px;">
+    <h2 class="title-font">⚙️ ตั้งค่าสำหรับคุณครู</h2>
+
+    <label for="setGameName">ชื่อเกม</label>
+    <input type="text" id="setGameName">
+    <label for="setTeacherName">ชื่อคุณครู</label>
+    <input type="text" id="setTeacherName">
+    <label for="setSchoolName">ชื่อโรงเรียน</label>
+    <input type="text" id="setSchoolName">
+
+    <div class="settingsRow">
+      <div>
+        <label for="setPlayTime">เวลาเล่น (วินาที)</label>
+        <input type="number" id="setPlayTime" min="20" max="240" step="5">
+      </div>
+      <div>
+        <label for="setMaxBubbles">จำนวนฟองสูงสุดในจอ</label>
+        <input type="number" id="setMaxBubbles" min="3" max="12" step="1">
+      </div>
+    </div>
+
+    <label for="setDifficulty">ระดับความยาก</label>
+    <select id="setDifficulty">
+      <option value="easy">ง่าย 🐣</option>
+      <option value="normal">ปกติ 🙂</option>
+      <option value="hard">ยาก 🔥</option>
+    </select>
+
+    <div class="toggleRow">
+      <input type="checkbox" id="setSoundOn" style="width:20px; height:20px;">
+      <label for="setSoundOn" style="margin:0;">เปิดเสียงประกอบ</label>
+    </div>
+
+    <h3 class="title-font" style="margin-top:18px;">คู่คำคล้องจอง</h3>
+    <div id="pairsList"></div>
+    <button class="btn btn-purple" id="addPairBtn" type="button">➕ เพิ่มคู่คำใหม่</button>
+
+    <div style="margin-top:18px;">
+      <button class="btn btn-green" id="saveSettingsBtn">💾 บันทึกการตั้งค่า</button>
+      <button class="btn btn-gray" id="resetSettingsBtn">↩️ คืนค่าเริ่มต้น</button><br>
+      <button class="btn btn-gray" id="settingsHomeBtn">🏠 หน้าแรก</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* =========================================================
+     DEFAULT DATA
+  ========================================================= */
+  var DEFAULT_PAIRS = [
+    {question:'นา',   correct:['ตา','ปลา','มา','ฟ้า'],          wrong:['ดิน','บ้าน','สวย','ไป']},
+    {question:'ใจ',   correct:['ไป','ไม้','ใหม่','ไหน'],         wrong:['ดี','มา','ฟ้า','กิน']},
+    {question:'ดาว',  correct:['ขาว','หนาว','ยาว','สาว'],        wrong:['ดิน','ตา','ไป','มือ']},
+    {question:'มือ',  correct:['คือ','ลือ','ถือ','สื่อ'],         wrong:['นา','ไป','ดาว','กิน']},
+    {question:'เดิน', correct:['เนิน','เกิน','เพลิน','เชิญ'],     wrong:['ตา','ไป','มือ','ดาว']},
+    {question:'ดิน',  correct:['หิน','ถิ่น','กิน','บิน'],          wrong:['นา','ไป','มือ','ดาว']},
+    {question:'แมว',  correct:['แถว','แก้ว','แล้ว','เลว'],        wrong:['ตา','ไป','ดิน','มือ']},
+    {question:'นก',   correct:['ตก','ยก','รก','หมก'],            wrong:['ตา','ไป','ดิน','มือ']}
+  ];
+
+  var DEFAULT_SETTINGS = {
+    gameName: '🎤 ล่าคำสัมผัส',
+    teacherName: 'ครูแก้วตา',
+    schoolName: 'ศรีบุญเรืองวิทยาคาร',
+    playTime: 60,
+    maxBubbles: 6,
+    difficulty: 'normal',
+    soundOn: true,
+    wordPairs: DEFAULT_PAIRS
+  };
+
+  var DIFFICULTY = {
+    easy:   {speedMin:0.28, speedMax:0.40, wrongRatio:0.30, spawnMs:1100},
+    normal: {speedMin:0.38, speedMax:0.55, wrongRatio:0.45, spawnMs:900},
+    hard:   {speedMin:0.52, speedMax:0.70, wrongRatio:0.60, spawnMs:700}
+  };
+
+  var STORAGE_KEY = 'rhymeBubbleGame_settings_v1';
+  var LEADERBOARD_KEY = 'rhymeBubbleGame_leaderboard_v1';
+
+  /* =========================================================
+     STATE
+  ========================================================= */
+  var settings = loadSettings();
+  var studentName = '';
+  var gameRunning = false;
+  var bubbles = [];
+  var score = 0, combo = 0, maxCombo = 0, correctCount = 0, wrongCount = 0;
+  var timeLeft = 60;
+  var timerInterval = null, spawnInterval = null, questionInterval = null;
+  var currentPairIndex = 0;
+  var audioCtx = null;
+  var audioUnlocked = false;
+
+  function deepClone(obj){
+    // structuredClone is NOT used on purpose for wider mobile support
+    return JSON.parse(JSON.stringify(obj));
+  }
+
+  /* =========================================================
+     STORAGE
+  ========================================================= */
+  function loadSettings(){
+    try{
+      var raw = localStorage.getItem(STORAGE_KEY);
+      if(!raw) return deepClone(DEFAULT_SETTINGS);
+      var parsed = JSON.parse(raw);
+      if(!parsed.wordPairs || !parsed.wordPairs.length){
+        parsed.wordPairs = deepClone(DEFAULT_PAIRS);
+      }
+      return parsed;
+    }catch(e){
+      return deepClone(DEFAULT_SETTINGS);
+    }
+  }
+  function saveSettingsToStorage(){
+    try{
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+    }catch(e){ /* ignore quota errors */ }
+  }
+  function loadLeaderboard(){
+    try{
+      var raw = localStorage.getItem(LEADERBOARD_KEY);
+      return raw ? JSON.parse(raw) : [];
+    }catch(e){ return []; }
+  }
+  function saveLeaderboard(list){
+    try{ localStorage.setItem(LEADERBOARD_KEY, JSON.stringify(list)); }catch(e){}
+  }
+
+  /* =========================================================
+     TOAST
+  ========================================================= */
+  var toastEl = document.getElementById('toast');
+  var toastTimer = null;
+  function showToast(msg){
+    toastEl.textContent = msg;
+    toastEl.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ toastEl.classList.remove('show'); }, 1800);
+  }
+
+  /* =========================================================
+     SCREEN SWITCHING
+  ========================================================= */
+  var screens = {
+    home: document.getElementById('screen-home'),
+    game: document.getElementById('screen-game'),
+    result: document.getElementById('screen-result'),
+    leaderboard: document.getElementById('screen-leaderboard'),
+    settings: document.getElementById('screen-settings')
+  };
+  function showScreen(name){
+    Object.keys(screens).forEach(function(k){
+      screens[k].classList.toggle('active', k === name);
+    });
+  }
+
+  /* =========================================================
+     BACKGROUND DECOR (ambient clouds/stars - CSS animation OK here,
+     this is NOT the bubble-floating mechanism)
+  ========================================================= */
+  function buildBgDecor(){
+    var wrap = document.getElementById('bgDecor');
+    var html = '';
+    for(var i=0;i<5;i++){
+      var size = 60 + Math.random()*90;
+      var top = Math.random()*55;
+      var dur = 28 + Math.random()*22;
+      var delay = -Math.random()*dur;
+      html += '<div class="cloud" style="width:'+size+'px;height:'+(size*0.55)+'px;top:'+top+'%;animation-duration:'+dur+'s;animation-delay:'+delay+'s;"></div>';
+    }
+    for(var j=0;j<14;j++){
+      var sx = Math.random()*100;
+      var sy = Math.random()*45;
+      var sd = 1.6 + Math.random()*2.2;
+      var sdelay = Math.random()*2.6;
+      html += '<div class="star" style="left:'+sx+'%; top:'+sy+'%; animation-duration:'+sd+'s; animation-delay:'+sdelay+'s;">✦</div>';
+    }
+    wrap.innerHTML = html;
+  }
+
+  /* =========================================================
+     AUDIO (Web Audio API beeps only - no audio files, no mic)
+  ========================================================= */
+  function ensureAudio(){
+    if(!audioCtx){
+      var AC = window.AudioContext || window.webkitAudioContext;
+      if(!AC) return;
+      audioCtx = new AC();
+    }
+    if(audioCtx.state === 'suspended'){ audioCtx.resume(); }
+    audioUnlocked = true;
+  }
+  function beep(freq, dur, type, vol){
+    if(!settings.soundOn || !audioUnlocked || !audioCtx) return;
+    try{
+      var o = audioCtx.createOscillator();
+      var g = audioCtx.createGain();
+      o.type = type || 'sine';
+      o.frequency.value = freq;
+      g.gain.value = vol || 0.16;
+      o.connect(g); g.connect(audioCtx.destination);
+      var now = audioCtx.currentTime;
+      g.gain.setValueAtTime(g.gain.value, now);
+      g.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+      o.start(now);
+      o.stop(now + dur);
+    }catch(e){}
+  }
+  function playSound(kind){
+    if(kind === 'correct'){ beep(880,0.12,'sine',0.18); setTimeout(function(){beep(1180,0.14,'sine',0.16);},90); }
+    else if(kind === 'wrong'){ beep(170,0.25,'sawtooth',0.18); }
+    else if(kind === 'tick'){ beep(520,0.1,'square',0.12); }
+    else if(kind === 'start'){ beep(660,0.18,'sine',0.18); setTimeout(function(){beep(990,0.22,'sine',0.18);},120); }
+    else if(kind === 'end'){ beep(740,0.16,'sine',0.18); setTimeout(function(){beep(520,0.22,'sine',0.16);},150); setTimeout(function(){beep(330,0.3,'sine',0.14);},320); }
+  }
+  document.addEventListener('pointerdown', function once(){
+    ensureAudio();
+  }, {once:true});
+
+  /* =========================================================
+     APPLY SETTINGS TO UI TEXT (names etc.)
+  ========================================================= */
+  function applyBrandingToUI(){
+    document.title = settings.gameName;
+    document.getElementById('gameNameHome').textContent = settings.gameName;
+    document.getElementById('schoolInfoHome').textContent =
+      '👩‍🏫 ' + settings.teacherName + '  •  🏫 ' + settings.schoolName;
+    document.getElementById('resultGameName').textContent = settings.gameName;
+  }
+
+  /* =========================================================
+     HOME SCREEN
+  ========================================================= */
+  var studentNameInput = document.getElementById('studentNameInput');
+  document.getElementById('startBtn').addEventListener('click', function(){
+    var name = studentNameInput.value.trim();
+    if(!name){
+      studentNameInput.classList.add('input-error');
+      studentNameInput.focus();
+      setTimeout(function(){ studentNameInput.classList.remove('input-error'); }, 400);
+      showToast('กรุณาพิมพ์ชื่อก่อนเริ่มเล่นนะ 😊');
+      return;
+    }
+    studentName = name;
+    showScreen('game');
+    startCountdown();
+  });
+  document.getElementById('goLeaderboardBtn').addEventListener('click', function(){
+    renderLeaderboard();
+    showScreen('leaderboard');
+  });
+  document.getElementById('goSettingsBtn').addEventListener('click', function(){
+    fillSettingsForm();
+    showScreen('settings');
+  });
+
+  /* =========================================================
+     GAME LOGIC
+  ========================================================= */
+  var bubbleArea = document.getElementById('bubbleArea');
+  var questionWordEl = document.getElementById('questionWord');
+  var hudTime = document.getElementById('hudTime');
+  var hudScore = document.getElementById('hudScore');
+  var hudCombo = document.getElementById('hudCombo');
+  var timeBarFill = document.getElementById('timeBarFill');
+  var countdownOverlay = document.getElementById('countdownOverlay');
+  var countdownText = document.getElementById('countdownText');
+  var gameWrap = document.getElementById('gameWrap');
+
+  function pickPairOrder(){
+    var idxs = [];
+    for(var i=0;i<settings.wordPairs.length;i++) idxs.push(i);
+    for(var i=idxs.length-1;i>0;i--){
+      var j = Math.floor(Math.random()*(i+1));
+      var t = idxs[i]; idxs[i]=idxs[j]; idxs[j]=t;
+    }
+    return idxs;
+  }
+  var pairOrder = [];
+  var pairOrderPos = 0;
+
+  function nextPairIndex(){
+    if(!pairOrder.length || pairOrderPos >= pairOrder.length){
+      pairOrder = pickPairOrder();
+      pairOrderPos = 0;
+    }
+    var idx = pairOrder[pairOrderPos];
+    pairOrderPos++;
+    return idx;
+  }
+
+  function currentPair(){
+    return settings.wordPairs[currentPairIndex];
+  }
+
+  function updateQuestionDisplay(){
+    questionWordEl.textContent = currentPair().question;
+  }
+
+  function clearBubbles(){
+    for(var i=0;i<bubbles.length;i++){
+      if(bubbles[i].el && bubbles[i].el.parentNode){
+        bubbles[i].el.parentNode.removeChild(bubbles[i].el);
+      }
+    }
+    bubbles = [];
+  }
+
+  function randomFrom(arr){
+    return arr[Math.floor(Math.random()*arr.length)];
+  }
+
+  function spawnBubble(){
+    if(!gameRunning) return;
+    var pair = currentPair();
+    if(!pair) return;
+    var diff = DIFFICULTY[settings.difficulty] || DIFFICULTY.normal;
+
+    var isCorrect = Math.random() > diff.wrongRatio;
+    var pool = isCorrect ? pair.correct : pair.wrong;
+    if(!pool || !pool.length){ pool = isCorrect ? pair.correct : pair.correct; isCorrect = true; }
+    var word = randomFrom(pool);
+
+    var vw = window.innerWidth, vh = window.innerHeight;
+    var base = Math.min(vw, vh);
+    var size = Math.max(64, Math.min(108, base * 0.20));
+    if(word.length >= 3) size = size * 1.05;
+
+    var maxLeft = Math.max(0, vw - size);
+    var left = Math.random() * maxLeft;
+    var startY = vh + size;
+
+    var el = document.createElement('div');
+    var colorClass = 'c' + (1 + Math.floor(Math.random()*6));
+    el.className = 'bubble ' + colorClass;
+    el.style.width = size + 'px';
+    el.style.height = size + 'px';
+    el.style.left = left + 'px';
+    el.style.top = startY + 'px';
+    var fontSize = Math.max(14, Math.min(26, size / (word.length > 2 ? word.length * 0.62 : 1.8)));
+    el.style.fontSize = fontSize + 'px';
+    el.textContent = word;
+
+    bubbleArea.appendChild(el);
+
+    var speed = diff.speedMin + Math.random() * (diff.speedMax - diff.speedMin);
+    var bubbleObj = { el: el, x: left, y: startY, size: size, word: word, isCorrect: isCorrect, speed: speed, popped:false };
+
+    el.addEventListener('pointerdown', function(ev){
+      ev.preventDefault();
+      onBubbleTap(bubbleObj);
+    }, {passive:false});
+
+    bubbles.push(bubbleObj);
+  }
+
+  function moveBubbles(){
+    if(!gameRunning) return;
+    for(var i = bubbles.length - 1; i >= 0; i--){
+      var b = bubbles[i];
+      if(b.popped) continue;
+      b.y -= b.speed;
+      b.el.style.top = b.y + 'px';
+      if(b.y < -b.size){
+        if(b.el.parentNode) b.el.parentNode.removeChild(b.el);
+        bubbles.splice(i, 1);
+      }
+    }
+    requestAnimationFrame(moveBubbles);
+  }
+
+  function showFloatScore(text, x, y, color){
+    var f = document.createElement('div');
+    f.className = 'floatScore';
+    f.textContent = text;
+    f.style.left = x + 'px';
+    f.style.top = y + 'px';
+    f.style.color = color;
+    document.body.appendChild(f);
+    requestAnimationFrame(function(){
+      f.style.transform = 'translateY(-60px)';
+      f.style.opacity = '0';
+    });
+    setTimeout(function(){
+      if(f.parentNode) f.parentNode.removeChild(f);
+    }, 850);
+  }
+
+  function shakeScreen(){
+    gameWrap.classList.remove('shake');
+    void gameWrap.offsetWidth;
+    gameWrap.classList.add('shake');
+  }
+
+  var correctSinceQuestionChange = 0;
+
+  function onBubbleTap(b){
+    if(!gameRunning || b.popped) return;
+    b.popped = true;
+    var rect = b.el.getBoundingClientRect();
+    var cx = rect.left + rect.width/2;
+    var cy = rect.top + rect.height/2;
+
+    b.el.classList.add('popping');
+    setTimeout(function(){
+      if(b.el.parentNode) b.el.parentNode.removeChild(b.el);
+      var idx = bubbles.indexOf(b);
+      if(idx > -1) bubbles.splice(idx, 1);
+    }, 180);
+
+    if(b.isCorrect){
+      combo++;
+      maxCombo = Math.max(maxCombo, combo);
+      var gained = 10 + combo * 2;
+      score += gained;
+      correctCount++;
+      correctSinceQuestionChange++;
+      playSound('correct');
+      showFloatScore('+' + gained, cx, cy, '#37b24d');
+      if(correctSinceQuestionChange >= 5){
+        correctSinceQuestionChange = 0;
+        changeQuestion();
+      }
+    } else {
+      combo = 0;
+      score = Math.max(0, score - 5);
+      wrongCount++;
+      playSound('wrong');
+      shakeScreen();
+      showFloatScore('-5', cx, cy, '#fa5252');
+    }
+    updateHUD();
+    setTimeout(function(){ if(gameRunning) spawnBubble(); }, 180);
+  }
+
+  function updateHUD(){
+    hudScore.textContent = score;
+    hudCombo.textContent = combo;
+  }
+
+  function changeQuestion(){
+    if(!gameRunning) return;
+    if(settings.wordPairs.length > 1){
+      var newIdx = currentPairIndex;
+      var tries = 0;
+      while(newIdx === currentPairIndex && tries < 10){
+        newIdx = nextPairIndex();
+        tries++;
+      }
+      currentPairIndex = newIdx;
+    }
+    updateQuestionDisplay();
+    clearBubbles();
+    spawnBubble();
+  }
+
+  function updateTimeBar(){
+    var pct = Math.max(0, (timeLeft / settings.playTime) * 100);
+    timeBarFill.style.width = pct + '%';
+  }
+
+  function startTimer(){
+    timeLeft = settings.playTime;
+    hudTime.textContent = timeLeft;
+    updateTimeBar();
+    timerInterval = setInterval(function(){
+      timeLeft--;
+      if(timeLeft < 0) timeLeft = 0;
+      hudTime.textContent = timeLeft;
+      updateTimeBar();
+      if(timeLeft <= 0){
+        endGame();
+      }
+    }, 1000);
+  }
+
+  function startCountdown(){
+    countdownOverlay.style.display = 'flex';
+    clearBubbles();
+    var n = 3;
+    countdownText.textContent = n;
+    playSound('tick');
+    var iv = setInterval(function(){
+      n--;
+      if(n > 0){
+        countdownText.textContent = n;
+        playSound('tick');
+      } else if(n === 0){
+        countdownText.textContent = 'เริ่ม!';
+        playSound('start');
+      } else {
+        clearInterval(iv);
+        countdownOverlay.style.display = 'none';
+        startGame();
+      }
+    }, 800);
+  }
+
+  function startGame(){
+    gameRunning = true;
+    score = 0; combo = 0; maxCombo = 0; correctCount = 0; wrongCount = 0;
+    correctSinceQuestionChange = 0;
+    pairOrder = pickPairOrder();
+    pairOrderPos = 0;
+    currentPairIndex = nextPairIndex();
+    updateQuestionDisplay();
+    updateHUD();
+    clearBubbles();
+
+    var diff = DIFFICULTY[settings.difficulty] || DIFFICULTY.normal;
+
+    spawnBubble(); // at least one bubble immediately
+
+    clearInterval(spawnInterval);
+    spawnInterval = setInterval(function(){
+      if(!gameRunning) return;
+      if(bubbles.length < settings.maxBubbles){
+        spawnBubble();
+      }
+    }, diff.spawnMs);
+
+    clearInterval(questionInterval);
+    questionInterval = setInterval(function(){
+      if(gameRunning) changeQuestion();
+    }, 16000);
+
+    requestAnimationFrame(moveBubbles);
+    startTimer();
+  }
+
+  function endGame(){
+    gameRunning = false;
+    clearInterval(timerInterval);
+    clearInterval(spawnInterval);
+    clearInterval(questionInterval);
+    clearBubbles();
+    playSound('end');
+    saveResultAndShow();
+  }
+
+  document.getElementById('exitGameBtn').addEventListener('click', function(){
+    if(window.confirm('ต้องการออกจากเกมตอนนี้เลยไหม? คะแนนจะไม่ถูกบันทึก')){
+      gameRunning = false;
+      clearInterval(timerInterval);
+      clearInterval(spawnInterval);
+      clearInterval(questionInterval);
+      clearBubbles();
+      showScreen('home');
+    }
+  });
+
+  /* =========================================================
+     RESULT SCREEN
+  ========================================================= */
+  var thaiMonths = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน',
+                     'กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+  function thaiDateNow(){
+    var d = new Date();
+    return d.getDate() + ' ' + thaiMonths[d.getMonth()] + ' พ.ศ. ' + (d.getFullYear() + 543);
+  }
+
+  function computeGrade(){
+    var total = correctCount + wrongCount;
+    var acc = total > 0 ? correctCount / total : 0;
+    if(acc >= 0.9)  return {grade:'เก่งมาก! สุดยอด 🌟', stars:5};
+    if(acc >= 0.75) return {grade:'ดีเยี่ยม! 😄', stars:4};
+    if(acc >= 0.6)  return {grade:'ดีมาก เก่งนะ 🙂', stars:3};
+    if(acc >= 0.4)  return {grade:'พอใช้ได้ ลองอีกที 🙂', stars:2};
+    return {grade:'ฝึกฝนอีกนิดนะ สู้ๆ 💪', stars:1};
+  }
+
+  function saveResultAndShow(){
+    var g = computeGrade();
+    var entry = {
+      name: studentName || 'นักเรียน',
+      score: score,
+      correct: correctCount,
+      wrong: wrongCount,
+      maxCombo: maxCombo,
+      grade: g.grade,
+      stars: g.stars,
+      date: thaiDateNow(),
+      ts: Date.now()
+    };
+    var list = loadLeaderboard();
+    list.push(entry);
+    list.sort(function(a,b){ return b.score - a.score; });
+    if(list.length > 50) list = list.slice(0, 50);
+    saveLeaderboard(list);
+
+    document.getElementById('resultStudent').textContent = '🧒 ' + entry.name;
+    var starsStr = '';
+    for(var i=0;i<5;i++) starsStr += (i < g.stars) ? '⭐' : '☆';
+    document.getElementById('resultStars').textContent = starsStr;
+    document.getElementById('resultGrade').textContent = g.grade;
+    document.getElementById('resultScore').textContent = score;
+    document.getElementById('resultCorrect').textContent = correctCount;
+    document.getElementById('resultWrong').textContent = wrongCount;
+    document.getElementById('resultMaxCombo').textContent = maxCombo;
+    document.getElementById('resultTeacherSchool').textContent =
+      '👩‍🏫 ' + settings.teacherName + '  •  🏫 ' + settings.schoolName;
+    document.getElementById('resultDate').textContent = '📅 ' + entry.date;
+
+    showScreen('result');
+  }
+
+  document.getElementById('playAgainBtn').addEventListener('click', function(){
+    showScreen('game');
+    startCountdown();
+  });
+  document.getElementById('resultLeaderboardBtn').addEventListener('click', function(){
+    renderLeaderboard();
+    showScreen('leaderboard');
+  });
+  document.getElementById('resultHomeBtn').addEventListener('click', function(){
+    showScreen('home');
+  });
+
+  /* ---- save result as image (html2canvas, CDN, graceful fallback) ---- */
+  function loadHtml2Canvas(cb){
+    if(window.html2canvas){ cb(true); return; }
+    var s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+    s.onload = function(){ cb(true); };
+    s.onerror = function(){ cb(false); };
+    document.head.appendChild(s);
+  }
+  document.getElementById('saveImageBtn').addEventListener('click', function(){
+    loadHtml2Canvas(function(ok){
+      if(!ok || !window.html2canvas){
+        alert('ไม่สามารถโหลดเครื่องมือบันทึกรูปภาพได้ในขณะนี้ กรุณาตรวจสอบการเชื่อมต่ออินเทอร์เน็ตแล้วลองใหม่อีกครั้ง');
+        return;
+      }
+      var target = document.getElementById('resultCard');
+      window.html2canvas(target, {backgroundColor:'#c89bea', scale:2}).then(function(canvas){
+        var link = document.createElement('a');
+        link.download = 'ผลคะแนน-' + (studentName || 'นักเรียน') + '.png';
+        link.href = canvas.toDataURL('image/png');
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }).catch(function(){
+        alert('เกิดข้อผิดพลาดระหว่างบันทึกรูปภาพ กรุณาลองใหม่อีกครั้ง');
+      });
+    });
+  });
+
+  /* =========================================================
+     LEADERBOARD SCREEN
+  ========================================================= */
+  function renderLeaderboard(){
+    var list = loadLeaderboard().slice().sort(function(a,b){ return b.score - a.score; });
+    var wrap = document.getElementById('leaderboardList');
+    if(!list.length){
+      wrap.innerHTML = '<div class="smallNote" style="font-size:1rem; padding:20px 0;">ยังไม่มีคะแนนเลย ลองเล่นเกมดูสิ! 🎮</div>';
+      return;
+    }
+    var html = '';
+    var medals = ['🥇','🥈','🥉'];
+    for(var i=0;i<Math.min(list.length, 10);i++){
+      var e = list[i];
+      var cls = i===0 ? 'gold' : (i===1 ? 'silver' : (i===2 ? 'bronze' : ''));
+      var rankDisplay = i < 3 ? medals[i] : (i+1);
+      html += '<div class="lbRow ' + cls + '">' +
+                '<div class="lbRank">' + rankDisplay + '</div>' +
+                '<div class="lbName">' + escapeHtml(e.name) + '</div>' +
+                '<div class="lbScore">' + e.score + ' คะแนน</div>' +
+              '</div>';
+    }
+    wrap.innerHTML = html;
+  }
+  function escapeHtml(str){
+    var d = document.createElement('div');
+    d.textContent = str;
+    return d.innerHTML;
+  }
+  document.getElementById('lbHomeBtn').addEventListener('click', function(){
+    showScreen('home');
+  });
+
+  /* =========================================================
+     SETTINGS SCREEN
+  ========================================================= */
+  var setGameName = document.getElementById('setGameName');
+  var setTeacherName = document.getElementById('setTeacherName');
+  var setSchoolName = document.getElementById('setSchoolName');
+  var setPlayTime = document.getElementById('setPlayTime');
+  var setMaxBubbles = document.getElementById('setMaxBubbles');
+  var setDifficulty = document.getElementById('setDifficulty');
+  var setSoundOn = document.getElementById('setSoundOn');
+  var pairsListEl = document.getElementById('pairsList');
+
+  function fillSettingsForm(){
+    setGameName.value = settings.gameName;
+    setTeacherName.value = settings.teacherName;
+    setSchoolName.value = settings.schoolName;
+    setPlayTime.value = settings.playTime;
+    setMaxBubbles.value = settings.maxBubbles;
+    setDifficulty.value = settings.difficulty;
+    setSoundOn.checked = !!settings.soundOn;
+    renderPairsEditor();
+  }
+
+  function renderPairsEditor(){
+    pairsListEl.innerHTML = '';
+    settings.wordPairs.forEach(function(pair, idx){
+      var card = document.createElement('div');
+      card.className = 'pairCard';
+      card.setAttribute('data-idx', idx);
+      card.innerHTML =
+        '<button type="button" class="delPairBtn" data-idx="' + idx + '">✕</button>' +
+        '<label>คำโจทย์</label>' +
+        '<input type="text" class="pairQuestion" value="' + escapeHtml(pair.question) + '">' +
+        '<label>คำคล้องจอง (ถูก) — คั่นด้วยจุลภาค ,</label>' +
+        '<input type="text" class="pairCorrect" value="' + escapeHtml(pair.correct.join(', ')) + '">' +
+        '<label>คำลวง (ผิด) — คั่นด้วยจุลภาค ,</label>' +
+        '<input type="text" class="pairWrong" value="' + escapeHtml(pair.wrong.join(', ')) + '">';
+      pairsListEl.appendChild(card);
+    });
+    var delBtns = pairsListEl.querySelectorAll('.delPairBtn');
+    delBtns.forEach(function(btn){
+      btn.addEventListener('click', function(){
+        var idx = parseInt(btn.getAttribute('data-idx'), 10);
+        if(settings.wordPairs.length <= 1){
+          showToast('ต้องมีคู่คำอย่างน้อย 1 คู่นะ');
+          return;
+        }
+        readPairsFromForm();
+        settings.wordPairs.splice(idx, 1);
+        renderPairsEditor();
+      });
+    });
+  }
+
+  function readPairsFromForm(){
+    var cards = pairsListEl.querySelectorAll('.pairCard');
+    var newPairs = [];
+    cards.forEach(function(card){
+      var q = card.querySelector('.pairQuestion').value.trim();
+      var c = card.querySelector('.pairCorrect').value.split(',').map(function(s){return s.trim();}).filter(Boolean);
+      var w = card.querySelector('.pairWrong').value.split(',').map(function(s){return s.trim();}).filter(Boolean);
+      if(q && c.length){
+        newPairs.push({question:q, correct:c, wrong: w.length ? w : ['ไป','ตา','มือ','ดิน']});
+      }
+    });
+    if(newPairs.length){
+      settings.wordPairs = newPairs;
+    }
+  }
+
+  document.getElementById('addPairBtn').addEventListener('click', function(){
+    readPairsFromForm();
+    settings.wordPairs.push({question:'คำใหม่', correct:['คำที่1','คำที่2'], wrong:['คำลวง1','คำลวง2']});
+    renderPairsEditor();
+  });
+
+  document.getElementById('saveSettingsBtn').addEventListener('click', function(){
+    readPairsFromForm();
+    settings.gameName = setGameName.value.trim() || DEFAULT_SETTINGS.gameName;
+    settings.teacherName = setTeacherName.value.trim() || DEFAULT_SETTINGS.teacherName;
+    settings.schoolName = setSchoolName.value.trim() || DEFAULT_SETTINGS.schoolName;
+    var pt = parseInt(setPlayTime.value, 10);
+    settings.playTime = (pt >= 20 && pt <= 240) ? pt : DEFAULT_SETTINGS.playTime;
+    var mb = parseInt(setMaxBubbles.value, 10);
+    settings.maxBubbles = (mb >= 3 && mb <= 12) ? mb : DEFAULT_SETTINGS.maxBubbles;
+    settings.difficulty = setDifficulty.value;
+    settings.soundOn = setSoundOn.checked;
+
+    saveSettingsToStorage();
+    applyBrandingToUI();
+    showToast('บันทึกการตั้งค่าเรียบร้อยแล้ว ✅');
+  });
+
+  document.getElementById('resetSettingsBtn').addEventListener('click', function(){
+    if(window.confirm('ต้องการคืนค่าเริ่มต้นทั้งหมดหรือไม่? คู่คำที่แก้ไขไว้จะหายไป')){
+      settings = deepClone(DEFAULT_SETTINGS);
+      saveSettingsToStorage();
+      applyBrandingToUI();
+      fillSettingsForm();
+      showToast('คืนค่าเริ่มต้นแล้ว');
+    }
+  });
+
+  document.getElementById('settingsHomeBtn').addEventListener('click', function(){
+    showScreen('home');
+  });
+
+  /* =========================================================
+     INIT
+  ========================================================= */
+  function init(){
+    buildBgDecor();
+    applyBrandingToUI();
+    fillSettingsForm();
+    showScreen('home');
+  }
+  init();
+
+})();
+</script>
+</body>
+</html>
